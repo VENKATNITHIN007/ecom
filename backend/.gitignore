@@ -1,0 +1,10 @@
+node_modules/
+public/temp
+.prettierrc
+.env
+*.env
+*.local
+.log
+# Local Netlify folder
+.netlify
+.vercel
