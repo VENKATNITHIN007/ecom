@@ -27,7 +27,7 @@ const portfolioSchema = new Schema<IPortfolio>(
   { timestamps: true }
 );
 
-const Portfolio =
-  models.Portfolio || model<IPortfolio>("Portfolio", portfolioSchema);
+export const Portfolio = mongoose.model<IPortfolio>("Portfolio", portfolioSchema);
+
 
 export default Portfolio;

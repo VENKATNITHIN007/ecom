@@ -27,7 +27,6 @@ const reviewSchema = new Schema<IReview>(
   { timestamps: true }
 );
 
-const Review =
-  models.Review || model<IReview>("Review", reviewSchema);
+export const Review = mongoose.model<IReview>("Review", reviewSchema);
 
 export default Review;

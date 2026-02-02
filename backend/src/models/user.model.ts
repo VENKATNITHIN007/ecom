@@ -1,16 +1,19 @@
-import mongoose, { Schema, model, models } from "mongoose";
+import mongoose, { Model, Schema } from "mongoose";
+import bcrypt from "bcrypt";
 
 export interface IUser {
   _id?: mongoose.Types.ObjectId;
 
-  // identifiers (at least one required)
   email?: string;
   phoneNumber?: string;
 
-  name?: string;
-  image?: string;
+  fullName: string;
+  avatar?: string;
 
-  // auth metadata
+  password: string;
+  refreshToken?: string;
+
+  // OTP / verification
   isEmailVerified?: boolean;
   isPhoneVerified?: boolean;
 
@@ -22,23 +25,53 @@ export interface IUser {
 
 const userSchema = new Schema<IUser>(
   {
+    fullName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
     email: {
       type: String,
-      lowercase: true,
-      trim: true,
-      sparse: true, // allows null + unique
       unique: true,
+      sparse: true,
+      trim: true,
+      lowercase: true,
+      index: true,
     },
+
     phoneNumber: {
       type: String,
-      sparse: true,
       unique: true,
+      sparse: true,
+      index: true,
     },
-    name: String,
-    image: String,
 
-    isEmailVerified: { type: Boolean, default: false },
-    isPhoneVerified: { type: Boolean, default: false },
+    password: {
+      type: String,
+      required: true,
+      select: false,
+    },
+
+    refreshToken: {
+      type: String,
+      select: false,
+    },
+
+    avatar: {
+      type: String,
+      default: null,
+    },
+
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    isPhoneVerified: {
+      type: Boolean,
+      default: false,
+    },
 
     role: {
       type: String,
@@ -46,29 +79,34 @@ const userSchema = new Schema<IUser>(
       default: "user",
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-/**
- * Ensure at least email OR phone exists
- */
-userSchema.pre("validate", function (next) {
-  if (!this.email && !this.phoneNumber) {
-    next(new Error("Email or phone number is required"));
-  } else {
-    next();
-  }
+
+userSchema.pre("save", async function () {
+    if (!this.isModified("password")) {
+        return;
+    }
+
+    this.password = await bcrypt.hash(this.password, 12);
 });
 
+userSchema.methods.isPasswordCorrect = async function (password: string,): Promise<boolean> {
+    return await bcrypt.compare(password, this.password);
+};
+
 userSchema.set("toJSON", {
-  transform: (_doc, ret: any) => {
+  transform: (_doc, ret:any) => {
+    delete ret.password;
+    delete ret.refreshToken;
     delete ret.__v;
-    delete ret.createdAt;
-    delete ret.updatedAt;
     return ret;
   },
 });
 
-const User = models.User || model<IUser>("User", userSchema);
+
+export const User = mongoose.model<IUser>("User", userSchema);
 
 export default User;

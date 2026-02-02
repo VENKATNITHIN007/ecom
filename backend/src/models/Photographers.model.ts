@@ -31,7 +31,6 @@ const photographerSchema = new Schema<IPhotographer>(
   { timestamps: true }
 );
 
-const Photographer =
-  models.Photographer || model<IPhotographer>("Photographer", photographerSchema);
+export const Photographer = mongoose.model<IPhotographer>("Photographer", photographerSchema);
 
 export default Photographer;
