@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { loginUser, registerUser } from "../controllers/user.controller";
+import { currentUser, loginUser, logoutUser, registerUser } from "../controllers/user.controller";
 import { validateRequest } from "../middlewares/validateRequest.middleware";
 import { LoginSchema, RegisterSchema } from "../validations/auth.validation";
 import { authMiddleware } from "../middlewares/auth.middleware";
@@ -12,7 +12,7 @@ userRouter
 
 userRouter
     .use(authMiddleware)
-    .get("/me")
-    .post("/logout")
+    .get("/me", currentUser)
+    .post("/logout", logoutUser)
 
 export default userRouter;

@@ -139,3 +139,23 @@ export const logoutUser = async (req: Request, res: Response) => {
         return res.status(500).json(new ApiError(500, message));
     }
 };
+
+
+export const currentUser = async (req: Request, res: Response) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json(new ApiError(401, AUTH_REQUIRED));
+        }
+
+        return res.json(new ApiResponse(req.user, "Fetched current user details"));
+    } catch (error) {
+        console.error("Current user fetch Error:", error);
+
+        const message =
+            error instanceof Error
+                ? error.message || "Something went wrong while fetching current user details"
+                : "Something went wrong while fetching current user details";
+
+        return res.status(500).json(new ApiError(500, message));       
+    }
+}
