@@ -10,7 +10,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         const token = req.cookies?.accessToken || req.headers.authorization?.split("Bearer")[1].trim();
 
         if (!token) {
-            throw new ApiError(401, AUTH_REQUIRED)
+            throw new ApiError(401, "Invalid token")
         }
 
         const decodedToken = verifyToken(token);

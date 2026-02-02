@@ -5,10 +5,7 @@ import errorHandler from "./middlewares/errorHandler.middleware"
 import ApiError from "./utils/ApiError"
 import connectToDB from "./db"
 import userRouter from "./routes/user.router"
-import cookieParser from "cookie-parser";
-
-
-
+import cookieParser from "cookie-parser"
 
 const allowedHost = process.env.ORIGIN_HOSTS ?
     process.env.ORIGIN_HOSTS.split(",").map((h) => h.trim()) : "*"
@@ -19,6 +16,7 @@ const app = express()
 
 app.use(express.json({ limit: "10MB" }))
 app.use(express.urlencoded({ limit: "10MB", extended: true }))
+app.use(cookieParser())
 
 /**
  * Cors
