@@ -1,125 +1,74 @@
-import mongoose, { Model, Schema } from "mongoose";
-import { UserType } from "../types/user";
-import bcrypt from "bcrypt";
+import mongoose, { Schema, model, models } from "mongoose";
 
-type userModel = Model<UserType>;
+export interface IUser {
+  _id?: mongoose.Types.ObjectId;
 
-type UserMethods = {
-    isPasswordCorrect: (password: string) => Promise<boolean>;
-};
+  // identifiers (at least one required)
+  email?: string;
+  phoneNumber?: string;
 
-const userSchema = new Schema<UserType, userModel, UserMethods>(
-    {
-        username: {
-            type: String,
-            required: [true, "Username is required"],
-            lowercase: true,
-            unique: true,
-            index: true,
-            trim: true,
-            minLength: [3, "Username must be at least 3 characters long"],
-            maxLength: [30, "Username cannot exceed 30 characters"],
-            match: [
-                /^[a-zA-Z0-9_]+$/,
-                "Username can only contain letters, numbers, and underscores",
-            ],
-        },
-        fullName: {
-            type: String,
-            required: [true, "Full name is required"],
-            trim: true,
-            minLength: [2, "Full name must be at least 2 characters long"],
-            maxLength: [50, "Full name cannot exceed 50 characters"],
-            match: [
-                /^[a-zA-Z\s]+$/,
-                "Full name can only contain letters and spaces",
-            ],
-        },
-        email: {
-            type: String,
-            required: [true, "Email address is required"],
-            unique: true,
-            index: true,
-            trim: true,
-            lowercase: true,
-            match: [
-                /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-                "Please provide a valid email address",
-            ],
-        },
-        password: {
-            type: String,
-            select: false,
-            required: [true, "Password is required"],
-            minLength: [8, "Password must be at least 8 characters long"],
-            maxLength: [70, "Password cannot exceed 70 characters"],
-            // validate: {
-            //     validator: function (password: string) {
-            //         return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(
-            //             password,
-            //         );
-            //     },
-            //     message:
-            //         "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
-            // },
-        },
-        refreshToken: {
-            type: String,
-            trim: true,
-            select: false,
-        },
-        avatar: {
-            type: String,
-            trim: true,
-            default: null,
-            validate: {
-                validator: function (url: string) {
-                    if (!url) return true;
-                    return /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/.test(url);
-                },
-                message: "Please provide a valid URL for the avatar",
-            },
-        },
-        role: {
-            type: String,
-            enum: {
-                values: ["user", "admin"],
-                message: "Role must be either user or admin",
-            },
-            default: "user",
-        }
+  name?: string;
+  image?: string;
+
+  // auth metadata
+  isEmailVerified?: boolean;
+  isPhoneVerified?: boolean;
+
+  role?: "user" | "admin";
+
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const userSchema = new Schema<IUser>(
+  {
+    email: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      sparse: true, // allows null + unique
+      unique: true,
     },
-    {
-        timestamps: true,
+    phoneNumber: {
+      type: String,
+      sparse: true,
+      unique: true,
     },
+    name: String,
+    image: String,
+
+    isEmailVerified: { type: Boolean, default: false },
+    isPhoneVerified: { type: Boolean, default: false },
+
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+  },
+  { timestamps: true }
 );
 
-userSchema.pre("save", async function () {
-    if (!this.isModified("password")) {
-        return;
-    }
-
-    this.password = await bcrypt.hash(this.password, 12);
+/**
+ * Ensure at least email OR phone exists
+ */
+userSchema.pre("validate", function (next) {
+  if (!this.email && !this.phoneNumber) {
+    next(new Error("Email or phone number is required"));
+  } else {
+    next();
+  }
 });
-
-userSchema.methods.isPasswordCorrect = async function (password: string,): Promise<boolean> {
-    return await bcrypt.compare(password, this.password);
-};
 
 userSchema.set("toJSON", {
-    transform: (doc, ret) => {
-        const { password, refreshToken, __v, ...rest } = ret;
-        return rest;
-    },
+  transform: (_doc, ret: any) => {
+    delete ret.__v;
+    delete ret.createdAt;
+    delete ret.updatedAt;
+    return ret;
+  },
 });
 
-userSchema.methods.toJSON = function () {
-    const user = this.toObject();
-    delete user.password;
-    delete user.refreshToken;
-    return user;
-};
-
-export const User = mongoose.model("User", userSchema);
+const User = models.User || model<IUser>("User", userSchema);
 
 export default User;
