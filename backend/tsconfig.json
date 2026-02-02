@@ -4,15 +4,19 @@
         "module": "commonjs",
         "rootDir": "./src",
         "outDir": "./dist",
+        // helpful in importing modules
         "esModuleInterop": true,
+        // enables strict file importing
         "forceConsistentCasingInFileNames": true,
         "strict": true,
         "skipLibCheck": true,
+        // Tells TS where to load type definitions from. By default, it looks in node_modules/@types and this can be extended to include custom type definition directories. here we add ./src/types to include our custom types.
         "typeRoots": [
             "./src/types",
             "./node_modules/@types",
         ]
     },
+    // It includes all files in src directory and types 
     "include": [
         "./src/**/*",
         "./src/types/**/*"

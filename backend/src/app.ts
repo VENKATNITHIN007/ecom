@@ -5,6 +5,10 @@ import errorHandler from "./middlewares/errorHandler.middleware"
 import ApiError from "./utils/ApiError"
 import connectToDB from "./db"
 import userRouter from "./routes/user.router"
+import cookieParser from "cookie-parser";
+
+
+
 
 const allowedHost = process.env.ORIGIN_HOSTS ?
     process.env.ORIGIN_HOSTS.split(",").map((h) => h.trim()) : "*"
@@ -32,6 +36,7 @@ app.use(cors({
 
 
 app.use(createVersionRoute("users"), userRouter)
+app.use(cookieParser());
 
 
 /**
