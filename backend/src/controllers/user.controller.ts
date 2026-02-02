@@ -61,8 +61,6 @@ export const registerUser: RequestHandler = async (req, res) => {
     try {
         const { email, password, username, fullName } = req.body;
 
-        console.log(req.body)
-
         const userExists = await User.findOne({
             $or: [{ email }, { username }]
         })
@@ -82,7 +80,6 @@ export const registerUser: RequestHandler = async (req, res) => {
         });
 
         if (!user._id) {
-
             return res.status(201).json(new ApiResponse({}, "User has been register successfully!"))
         }
 
