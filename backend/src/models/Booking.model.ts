@@ -17,22 +17,31 @@ const bookingSchema = new Schema<IBooking>(
       type: Schema.Types.ObjectId,
       ref: "Photographer",
       required: true,
+      index: true,
     },
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
-    eventDate: { type: Date, required: true },
+    eventDate: { type: Date, required: true, index: true },
     message: String,
     status: {
       type: String,
       enum: ["pending", "accepted", "rejected", "completed"],
       default: "pending",
+      index: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
+
+// Compound indexes for common queries
+bookingSchema.index({ userId: 1, status: 1 });
+bookingSchema.index({ photographerId: 1, status: 1 });
+bookingSchema.index({ userId: 1, photographerId: 1, eventDate: 1 });
+bookingSchema.index({ createdAt: -1 });
 
 export const Booking = mongoose.model<IBooking>("Booking", bookingSchema);
 

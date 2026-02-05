@@ -1,10 +1,6 @@
 import { z } from 'zod';
 
 export const LoginSchema = z.object({
-    username: z.string({
-        required_error: "User name is required",
-        invalid_type_error: "User name must be a string"
-    }).optional(),
     email: z.string({
         required_error: "Email Address is required",
         invalid_type_error: "Email must be a string"
@@ -16,10 +12,6 @@ export const LoginSchema = z.object({
 });
 
 export const RegisterSchema = z.object({
-    username: z.string({
-        required_error: "User Name is required",
-        invalid_type_error: "User Name must be a string"
-    }).min(1, { message: "User name must be 1 or more characters long" }),
     fullName: z.string({
         required_error: "full Name is required",
         invalid_type_error: "Full Name must be a string"

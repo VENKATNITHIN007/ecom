@@ -15,19 +15,27 @@ const portfolioSchema = new Schema<IPortfolio>(
       type: Schema.Types.ObjectId,
       ref: "Photographer",
       required: true,
+      index: true,
     },
     mediaUrl: { type: String, required: true },
     mediaType: {
       type: String,
       enum: ["image", "video"],
       required: true,
+      index: true,
     },
-    category: String,
+    category: { type: String, index: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export const Portfolio = mongoose.model<IPortfolio>("Portfolio", portfolioSchema);
+// Index for fetching portfolio items by photographer with category filter
+portfolioSchema.index({ photographerId: 1, category: 1 });
+portfolioSchema.index({ photographerId: 1, createdAt: -1 });
 
+export const Portfolio = mongoose.model<IPortfolio>(
+  "Portfolio",
+  portfolioSchema,
+);
 
 export default Portfolio;

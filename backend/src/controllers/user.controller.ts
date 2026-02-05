@@ -58,11 +58,9 @@ export const loginUser = async (req: Request, res: Response) => {
  */
 export const registerUser: RequestHandler = async (req, res) => {
     try {
-        const { email, password, username, fullName } = req.body;
+        const { email, password, fullName } = req.body;
 
-        const userExists = await User.findOne({
-            $or: [{ email }, { username }]
-        })
+        const userExists = await User.findOne({ email });
 
         if (userExists) {
             return res.status(401).json(new ApiError(409, USER_EXISTS))
@@ -72,13 +70,12 @@ export const registerUser: RequestHandler = async (req, res) => {
          * Create a new User
          */
         const user = await User.create({
-            username,
             fullName,
             email,
             password
         });
 
-        if (!user._id) {
+        if (user._id) {
             return res.status(201).json(new ApiResponse({}, "User has been register successfully!"))
         }
 

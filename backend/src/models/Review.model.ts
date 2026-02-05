@@ -15,17 +15,23 @@ const reviewSchema = new Schema<IReview>(
       type: Schema.Types.ObjectId,
       ref: "Photographer",
       required: true,
+      index: true,
     },
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
     rating: { type: Number, min: 1, max: 5, required: true },
     comment: String,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
+
+// Ensure a user can only review a photographer once
+reviewSchema.index({ userId: 1, photographerId: 1 }, { unique: true });
+reviewSchema.index({ createdAt: -1 });
 
 export const Review = mongoose.model<IReview>("Review", reviewSchema);
 
