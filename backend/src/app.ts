@@ -1,20 +1,23 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
+import connectToDB from "./db";
+
 import { createVersionRoute } from "./utils/helper";
 import errorHandler from "./middlewares/errorHandler.middleware";
 import ApiError from "./utils/ApiError";
-import connectToDB from "./db";
-import userRouter from "./routes/user.router";
-import cookieParser from "cookie-parser";
-import photographerRouter from "./routes/photographer.route";
-import portfolioRouter from "./routes/portfolio.route";
-import reviewRouter from "./routes/review.route";
-import bookingRouter from "./routes/booking.route";
 import {
   securityHeaders,
   removeSensitiveHeaders,
 } from "./middlewares/security.middleware";
 import { apiRateLimiter } from "./middlewares/rateLimiter.middleware";
+
+import userRouter from "./routes/user.router";
+import photographerRouter from "./routes/photographer.route";
+import portfolioRouter from "./routes/portfolio.route";
+import reviewRouter from "./routes/review.route";
+import bookingRouter from "./routes/booking.route";
+
 
 const allowedHost = process.env.ORIGIN_HOSTS
   ? process.env.ORIGIN_HOSTS.split(",").map((h) => h.trim())
