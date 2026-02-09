@@ -156,6 +156,11 @@ export const browsePhotographers: RequestHandler = asyncHandler(
       sortOrder,
     } = req.query as Record<string, string>;
 
+    // parse page from query string, default = "1"
+    // base 10 means decimal number system
+
+    // Math.max returns the BIGGEST value among arguments and Math.min returns the SMALLEST value among arguments. This ensures page is NEVER less than 1 and limit is between 1 and 50 to prevent abuse.
+  
     const pageNum = Math.max(1, parseInt(page || "1", 10));
     const limitNum = Math.min(50, Math.max(1, parseInt(limit || "15", 10)));
     const skip = (pageNum - 1) * limitNum;
@@ -166,7 +171,8 @@ export const browsePhotographers: RequestHandler = asyncHandler(
     const filter: Record<string, unknown> = {};
 
     if (location) {
-      filter.location = { $regex: location, $options: "i" };
+      // Use exact match for controlled input, suitable for indexing
+      filter.location = location;
     }
 
     if (specialty) {
@@ -182,10 +188,10 @@ export const browsePhotographers: RequestHandler = asyncHandler(
     }
 
     if (search) {
+      // Only search username and location, both controlled and indexable fields
       filter.$or = [
-        { username: { $regex: search, $options: "i" } },
-        { bio: { $regex: search, $options: "i" } },
-        { location: { $regex: search, $options: "i" } },
+        { username: { $regex: `^${search}`, $options: "i" } },
+        { location: { $regex: `^${search}`, $options: "i" } },
       ];
     }
 
