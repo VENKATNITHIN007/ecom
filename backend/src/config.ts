@@ -1,6 +1,7 @@
 import "dotenv/config"
 
 export const appConfig = {
+    // NODE_ENV is set to 'production' when the app is running in production environment by platforms, otherwise it is undefined, so we need to check for both conditions to enable debug mode in development and when APP_DEBUG is set to true , the second condition is useful for enabling debug mode in staging environment where NODE_ENV is set to 'production' but we still want to see debug logs
     debug: process.env.NODE_ENV !== "production" || String(process.env.APP_DEBUG).toLowerCase() === "true",
 
     // Access Token

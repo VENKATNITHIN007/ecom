@@ -111,8 +111,8 @@ export const getPortfolioByUsername = asyncHandler(
 /**
  * Update portfolio item
  */
-export const updatePortfolioItem = async (req: Request, res: Response) => {
-  try {
+export const updatePortfolioItem =  asyncHandler(async (req: Request, res: Response) => {
+
     if (!req.user) {
       return res.status(401).json(new ApiError(401, "Authentication required"));
     }
@@ -147,15 +147,7 @@ export const updatePortfolioItem = async (req: Request, res: Response) => {
       .json(
         new ApiResponse(portfolioItem, "Portfolio item updated successfully"),
       );
-  } catch (error) {
-    console.error("Update Portfolio Item Error:", error);
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Something went wrong while updating portfolio item";
-    return res.status(500).json(new ApiError(500, message));
-  }
-};
+})
 
 /**
  * Delete single portfolio item

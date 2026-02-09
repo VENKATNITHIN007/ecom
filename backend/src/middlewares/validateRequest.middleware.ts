@@ -14,13 +14,8 @@ export const validateRequest = (schema: ZodType) => {
 
             next()
         } catch (error) {
-
-            if (error instanceof ZodError) {
-                const resError = error.issues.map((e) => e.message);
-                return res.status(409).json(new ApiError(409, "Invalid data", resError))
-            }
-
             next(error);
         }
     }
 }
+
