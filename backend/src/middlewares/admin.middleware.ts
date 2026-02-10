@@ -18,6 +18,6 @@ export const isAdmin = async (req: Request, res: Response, next: NextFunction) =
 
         next();
     } catch (error) {
-        return res.status(500).json(new ApiError(500, "Internal server error"));
+        throw new ApiError(500, "Internal Server Error");
     }
 };

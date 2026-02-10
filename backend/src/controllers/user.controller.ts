@@ -5,96 +5,70 @@ import ApiError from "../utils/ApiError";
 import { AUTH_FAILED, AUTH_REQUIRED, USER_EXISTS } from "../constants";
 import { generateTokens } from "../utils/helper";
 import { clearCookieOptions } from "../config";
+import { asyncHandler } from "../utils/asyncHandler";
 
 /**
  * Login user
- * @param req 
- * @param res 
- * @returns 
+ * @param req
+ * @param res
+ * @returns
  */
-export const loginUser = async (req: Request, res: Response) => {
-    try {
+export const loginUser = asyncHandler(async (req: Request, res: Response) => {
+  const { email, password } = req.body;
 
-        const { email, password } = req.body;
+  const userExists = await User.findOne({ email }).select("+password");
+  if (!userExists) {
+    throw new ApiError(401, AUTH_FAILED);
+  }
 
-        const userExists = await User.findOne({ email }).select("+password")
+  if (!userExists.isPasswordCorrect(password)) {
+    throw new ApiError(401, AUTH_FAILED);
+  }
 
-        if (!userExists) {
-            return res.status(401).json(new ApiError(401, AUTH_FAILED))
-        }
+  const user = {
+    _id: userExists._id,
+    fullName: userExists.fullName,
+    avatar: userExists.avatar,
+    role: userExists.role,
+  };
 
-        if (!userExists.isPasswordCorrect(password)) {
-            return res.status(401).json(new ApiError(401, AUTH_FAILED))
-        }
-
-        const user = {
-            _id: userExists._id,
-            fullName: userExists.fullName,
-            avatar: userExists.avatar,
-            role: userExists.role,
-        }
-
-        const { accessToken, refreshToken } = await generateTokens(user);
-
-
-        return res.json(new ApiResponse({ user, accessToken, refreshToken }, "You've been logged in successfully!"))
-    } catch (error) {
-
-        console.error("Login user Error:", error);
-
-        const message =
-            error instanceof Error
-                ? error.message || "Something went wrong while logging user"
-                : "Something went wrong while logging user";
-
-        return res.status(500).json(new ApiError(500, message));
-    }
-}
+  const { accessToken, refreshToken } = await generateTokens(user);
+  return res.json(
+    new ApiResponse(
+      { user, accessToken, refreshToken },
+      "You've been logged in successfully!",
+    ),
+  );
+});
 
 /**
  * Register a new User
- * @param req 
- * @param res 
- * @returns 
+ * @param req
+ * @param res
+ * @returns
  */
-export const registerUser: RequestHandler = async (req, res) => {
-    try {
-        const { email, password, fullName } = req.body;
+export const registerUser: RequestHandler = asyncHandler(async (req, res) => {
+  const { email, password, fullName } = req.body;
 
-        const userExists = await User.findOne({ email });
+  const userExists = await User.findOne({ email });
+  if (userExists) {
+    throw new ApiError(409, USER_EXISTS);
+  }
 
-        if (userExists) {
-            return res.status(401).json(new ApiError(409, USER_EXISTS))
-        }
+  const user = await User.create({
+    fullName,
+    email,
+    password,
+  });
 
-        /**
-         * Create a new User
-         */
-        const user = await User.create({
-            fullName,
-            email,
-            password
-        });
+  if (user._id) {
+    return res
+      .status(201)
+      .json(new ApiResponse({}, "User has been register successfully!"));
+  }
 
-        if (user._id) {
-            return res.status(201).json(new ApiResponse({}, "User has been register successfully!"))
-        }
-
-
-        return res.status(500).json(new ApiError(500, "Someting went wrong while registering user"))
-
-    } catch (error) {
-        console.error("Register user Error:", error);
-
-        const message =
-            error instanceof Error
-                ? error.message || "Something went wrong while registering a new user"
-                : "Something went wrong while registering a new user";
-
-        return res.status(500).json(new ApiError(500, message));
-    }
-}
-
+  throw new ApiError(500, "Someting went wrong while registering user");
+});
 
 /**
  * Logout User
@@ -102,57 +76,33 @@ export const registerUser: RequestHandler = async (req, res) => {
  * @param res
  * @returns
  */
-export const logoutUser = async (req: Request, res: Response) => {
-    try {
+export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(401, AUTH_REQUIRED);
+  }
 
-        if (!req.user) {
-            return res.status(401).json(new ApiError(401, AUTH_REQUIRED))
-        }
+  const userId = req.user._id;
+  const user = await User.findByIdAndUpdate(userId, {
+    $set: {
+      refreshToken: undefined,
+    },
+  });
 
-        const userId = req.user._id;
+  if (!user) {
+    throw new ApiError(404, "User not found!");
+  }
 
-        const user = await User.findByIdAndUpdate(userId, {
-            $set: {
-                refreshToken: undefined,
-            },
-        });
+  return res
+    .clearCookie("accessToken", clearCookieOptions)
+    .clearCookie("refreshToken", clearCookieOptions)
+    .json(new ApiResponse({}, "You've logged out successfully!"));
+});
 
-        if (!user) {
-            return res.status(404).json(new ApiError(404, "User not found!"))
-        }
-
-        return res
-            .clearCookie("accessToken", clearCookieOptions)
-            .clearCookie("refreshToken", clearCookieOptions)
-            .json(new ApiResponse({}, "You've logged out successfully!"))
-    } catch (error) {
-        console.error("Logout user Error:", error);
-
-        const message =
-            error instanceof Error
-                ? error.message || "Something went wrong while logout a User"
-                : "Something went wrong while logout a User";
-
-        return res.status(500).json(new ApiError(500, message));
-    }
-};
-
-
-export const currentUser = async (req: Request, res: Response) => {
-    try {
-        if (!req.user) {
-            return res.status(401).json(new ApiError(401, AUTH_REQUIRED));
-        }
-
-        return res.status(200).json(new ApiResponse(req.user, "Fetched current user details"));
-    } catch (error) {
-        console.error("Current user fetch Error:", error);
-
-        const message =
-            error instanceof Error
-                ? error.message || "Something went wrong while fetching current user details"
-                : "Something went wrong while fetching current user details";
-
-        return res.status(500).json(new ApiError(500, message));
-    }
-}
+export const currentUser = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(401, AUTH_REQUIRED);
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(req.user, "Fetched current user details"));
+});
